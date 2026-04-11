@@ -1,0 +1,30 @@
+# Data
+yfinance
+pandas
+numpy
+requests
+
+# Optimisation
+PyPortfolioOpt
+scipy
+cvxpy
+
+# Explainability
+shap
+
+# Visualisation
+plotly
+matplotlib
+seaborn
+
+# Dashboard
+dash
+dash-bootstrap-components
+
+# Notebooks
+jupyterlab
+ipykernel
+
+# Utilities
+python-dotenv
+tqdm
