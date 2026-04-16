@@ -63,7 +63,7 @@ PROCESSED_DIR = os.path.join(os.path.dirname(__file__), "processed")
     Returns
     -------
     pd.DataFrame : Date-indexed DataFrame of closing prices
-    """
+"""
 #-------------------------------------------------------------------------------------
 def fetch_prices(
     tickers: list,
