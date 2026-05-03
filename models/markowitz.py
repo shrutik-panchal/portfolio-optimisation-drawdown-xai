@@ -299,14 +299,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run Markowitz portfolio optimisation")
     parser.add_argument("--tickers", nargs="+",
-        default=[
-    "AXISBANK.NS",
-    "HDFCBANK.NS",
-    "ICICIBANK.NS",
-    "KOTAKBANK.NS",
-    "PNB.NS",
-    "SBIN.NS",   
-    ])
+        default=["AXISBANK.NS", "HDFCBANK.NS", "ICICIBANK.NS", "KOTAKBANK.NS", "PNB.NS", "SBIN.NS",])
     parser.add_argument("--start",            default="2020-01-01")
     parser.add_argument("--end",              default=None)
     parser.add_argument("--rfr",   type=float, default=RISK_FREE_RATE)
