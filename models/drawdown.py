@@ -4,7 +4,7 @@ drawdown.py
 -----------
 Drawdown analysis and CDaR (Conditional Drawdown-at-Risk) optimisation.
 
-Provides:
+Provides:-
   1. Drawdown curve       — underwater equity curve over time
   2. Max Drawdown (MDD)   — single worst peak-to-trough loss
   3. CDaR optimisation    — minimise average of worst β% drawdowns
@@ -13,7 +13,7 @@ Provides:
 
 Integrates directly with data/fetch_data.py and models/markowitz.py.
 
-Usage (standalone):
+Usage (standalone):-
     from data.fetch_data import get_data
     from models.drawdown import run_drawdown
 
@@ -58,9 +58,6 @@ def compute_drawdown_curve(cumulative_returns: pd.Series) -> pd.Series:
     running_peak = cumulative_returns.cummax()
     drawdown     = (cumulative_returns - running_peak) / running_peak
     return drawdown
-
-#-------------------------------------------------------------------------------------
-# Compute portfolio drawdown curve given returns and weights
 #-------------------------------------------------------------------------------------
 """
     Compute the drawdown curve for a weighted portfolio.
@@ -69,8 +66,7 @@ def compute_drawdown_curve(cumulative_returns: pd.Series) -> pd.Series:
     returns : pd.DataFrame — daily returns per asset
     weights : dict or pd.Series — portfolio weights (must sum to 1)
 
-    Returns:-
-    pd.Series : date-indexed drawdown curve
+    Returns: pd.Series : date-indexed drawdown curve
 """
 def compute_portfolio_drawdown(
     returns: pd.DataFrame,
@@ -113,8 +109,7 @@ def average_drawdown(drawdown_curve: pd.Series) -> float:
     drawdown_curve : pd.Series — drawdown values (negative floats)
     beta           : float     — confidence level, typically 0.95
 
-    Returns:-
-    float : CDaR value (positive, e.g. 0.18 = 18% average tail drawdown)
+    Returns: float : CDaR value (positive, e.g. 0.18 = 18% average tail drawdown)
 
     Intuition:-
     beta=0.95 → "On the worst 5% of days, my average drawdown was X%"
@@ -138,8 +133,7 @@ def cdar(drawdown_curve: pd.Series, beta: float = 0.95) -> float:
     weights        : portfolio weights
     risk_free_rate : not used in formula but kept for API consistency
 
-    Returns:-
-    float : Calmar ratio (annualised return / max drawdown)
+    Returns: float : Calmar ratio (annualised return / max drawdown)
 """
 def calmar_ratio(
     returns: pd.DataFrame,
@@ -167,8 +161,7 @@ def calmar_ratio(
         'average_drawdown' : float,
         'cdar'             : float,
         'calmar_ratio'     : float,
-        'beta'             : float,
-    }
+        'beta'             : float,}
 """
 def drawdown_stats(
     returns: pd.DataFrame,
@@ -183,8 +176,7 @@ def drawdown_stats(
         "average_drawdown": round(average_drawdown(dd_curve), 6),
         "cdar":             round(cdar(dd_curve, beta), 6),
         "calmar_ratio":     calmar_ratio(returns, weights, risk_free_rate),
-        "beta":             beta,
-    }
+        "beta":             beta,}
 #-------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------
 # Step 3: CDaR Optimisation 
@@ -222,8 +214,7 @@ def _portfolio_cdar(weights_arr: np.ndarray, returns_arr: np.ndarray, beta: floa
         'average_drawdown' : float,
         'calmar_ratio'     : float,
         'annual_return'    : float,
-        'annual_vol'       : float,
-    }
+        'annual_vol'       : float,}
 """
 def optimize_min_cdar(
     returns: pd.DataFrame,
@@ -271,13 +262,12 @@ def optimize_min_cdar(
         "annual_return":    round(ann_return, 6),
         "annual_vol":       round(ann_vol, 6),
         "sharpe_ratio":     round((ann_return - risk_free_rate) / ann_vol, 4)
-                            if ann_vol > 0 else 0.0,
-    }
+                            if ann_vol > 0 else 0.0,}
 
     log.info(
         f"Min CDaR (β={beta}) → CDaR: {stats['cdar']:.2%}, "
-        f"MDD: {stats['max_drawdown']:.2%}, Return: {stats['annual_return']:.2%}"
-    )
+        f"MDD: {stats['max_drawdown']:.2%}, Return: {stats['annual_return']:.2%}")
+    
     return stats
 #-------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------
@@ -379,11 +369,9 @@ def compute_cdar_frontier(
     Compute Max Drawdown and recovery stats for each individual asset.
     Useful for the dashboard's asset comparison panel.
 
-    Parameters:-
-    prices : pd.DataFrame — adjusted closing prices
+    Parameters: prices : pd.DataFrame — adjusted closing prices
 
-    Returns:-
-    pd.DataFrame : one row per asset with columns: ['Max Drawdown', 'Avg Drawdown', 'Current Drawdown', 'Ann. Return']
+    Returns: pd.DataFrame : one row per asset with columns: ['Max Drawdown', 'Avg Drawdown', 'Current Drawdown', 'Ann. Return']
 """
 def asset_drawdown_table(prices: pd.DataFrame) -> pd.DataFrame:
     records = []
@@ -425,8 +413,7 @@ def asset_drawdown_table(prices: pd.DataFrame) -> pd.DataFrame:
         'asset_table'     : pd.DataFrame  — per-asset drawdown stats
         'markowitz_dd'    : dict | None   — drawdown stats for Markowitz weights
                                             (only if markowitz_weights provided)
-        'equal_weight_dd' : dict          — drawdown stats for 1/N benchmark
-    }
+        'equal_weight_dd' : dict          — drawdown stats for 1/N benchmark}
 
     Example:-
     >>> from data.fetch_data import get_data

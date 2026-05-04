@@ -43,15 +43,12 @@ def compute_expected_returns(prices, method="mean_historical_return"):
     log.info(f"Expected returns ({method}):\n{mu.round(4)}")
     return mu
 #-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-# Compute covariance matrix using specified method. Ledoit-Wolf shrinkage is preferred
-#-------------------------------------------------------------------------------------
-def compute_covariance(prices, method="ledoit_wolf"):
-    """
+"""
     Ledoit-Wolf shrinkage is preferred over raw sample covariance.
     Sample covariance is noisy for small T/N ratios — common in equity
     portfolios with fewer than 5 years of data.
-    """
+"""
+def compute_covariance(prices, method="ledoit_wolf"):    
     if method == "exp_cov":
         S = risk_models.exp_cov(prices, frequency=TRADING_DAYS)
     elif method == "sample_cov":
@@ -64,11 +61,11 @@ def compute_covariance(prices, method="ledoit_wolf"):
 #-------------------------------------------------------------------------------------
 # Step 2: Portfolio Performance 
 #-------------------------------------------------------------------------------------
-def portfolio_performance(weights, mu, S, risk_free_rate=RISK_FREE_RATE):
-    """
+"""
     Returns annualised return, volatility, and Sharpe ratio for given weights.
     weights can be a dict or pd.Series mapping ticker → weight.
-    """
+"""
+def portfolio_performance(weights, mu, S, risk_free_rate=RISK_FREE_RATE):    
     if isinstance(weights, dict):
         weights = pd.Series(weights)
     weights = weights.reindex(mu.index).fillna(0)
@@ -82,8 +79,7 @@ def portfolio_performance(weights, mu, S, risk_free_rate=RISK_FREE_RATE):
         "annual_return": round(port_return, 6),
         "annual_vol":    round(port_vol,    6),
         "sharpe_ratio":  round(sharpe,      6),
-        "weights":       weights.sort_values(ascending=False).round(6),
-    }
+        "weights":       weights.sort_values(ascending=False).round(6),}
 #-------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------
 # Step 3: Core Optimisations
@@ -91,16 +87,12 @@ def portfolio_performance(weights, mu, S, risk_free_rate=RISK_FREE_RATE):
 def _build_ef(mu, S, weight_bounds=(0, 1)):
     return EfficientFrontier(mu, S, weight_bounds=weight_bounds)
 #-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-# Each optimization target is wrapped in a function that builds the Efficient Frontier,
-# runs the optimization, and computes performance metrics for the resulting portfolio.
-#-------------------------------------------------------------------------------------
-def optimize_max_sharpe(mu, S, risk_free_rate=RISK_FREE_RATE, weight_bounds=(0, 1)):
-    """
+"""
     Tangency portfolio — maximises Sharpe Ratio.
     The point where a line from the risk-free rate is tangent to the
     efficient frontier.
-    """
+"""
+def optimize_max_sharpe(mu, S, risk_free_rate=RISK_FREE_RATE, weight_bounds=(0, 1)):   
     ef = _build_ef(mu, S, weight_bounds)
     try:
         ef.max_sharpe(risk_free_rate=risk_free_rate)
@@ -112,29 +104,21 @@ def optimize_max_sharpe(mu, S, risk_free_rate=RISK_FREE_RATE, weight_bounds=(0, 
     log.info(f"Max Sharpe → Return: {perf['annual_return']:.2%}, Vol: {perf['annual_vol']:.2%}, Sharpe: {perf['sharpe_ratio']:.3f}")
     return perf
 #-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-# The Global Minimum Variance (GMV) portfolio is the leftmost point on the efficient frontier,
-# representing the lowest possible volatility. It relies only on the covariance structure
-#-------------------------------------------------------------------------------------
-def optimize_min_volatility(mu, S, risk_free_rate=RISK_FREE_RATE, weight_bounds=(0, 1)):
-    """
+"""
     Global Minimum Variance (GMV) portfolio — the leftmost point on
     the efficient frontier. Relies only on covariance structure.
-    """
+"""
+def optimize_min_volatility(mu, S, risk_free_rate=RISK_FREE_RATE, weight_bounds=(0, 1)):    
     ef = _build_ef(mu, S, weight_bounds)
     ef.min_volatility()
     perf = portfolio_performance(ef.clean_weights(), mu, S, risk_free_rate)
     log.info(f"Min Vol → Return: {perf['annual_return']:.2%}, Vol: {perf['annual_vol']:.2%}, Sharpe: {perf['sharpe_ratio']:.3f}")
     return perf
 #-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-# The naive 1/N equal-weight portfolio is a common benchmark. It does not rely on any
-# estimates and can outperform optimized portfolios out-of-sample due to estimation errors.
-#-------------------------------------------------------------------------------------
-def optimize_equal_weight(mu, S, risk_free_rate=RISK_FREE_RATE):
-    """
+"""
     Naive 1/N equal-weight portfolio — used as a benchmark.
-    """
+"""
+def optimize_equal_weight(mu, S, risk_free_rate=RISK_FREE_RATE):    
     n       = len(mu)
     weights = pd.Series({t: 1.0 / n for t in mu.index})
     perf    = portfolio_performance(weights, mu, S, risk_free_rate)
@@ -144,14 +128,14 @@ def optimize_equal_weight(mu, S, risk_free_rate=RISK_FREE_RATE):
 #-------------------------------------------------------------------------------------
 # Step 4: Efficient Frontier
 #-------------------------------------------------------------------------------------
-def compute_efficient_frontier(mu, S, n_points=50, risk_free_rate=RISK_FREE_RATE, weight_bounds=(0, 1)):
-    """
+"""
     Generate N portfolios tracing the efficient frontier by sweeping
     target returns from min-vol to max-return.
 
     Returns a DataFrame with columns:
         target_return | annual_vol | annual_return | sharpe_ratio | <ticker weights>
-    """
+"""
+def compute_efficient_frontier(mu, S, n_points=50, risk_free_rate=RISK_FREE_RATE, weight_bounds=(0, 1)):    
     min_ret = float(mu.min()) * 1.05
     max_ret = float(mu.max()) * 0.95
     target_returns = np.linspace(min_ret, max_ret, n_points)
@@ -202,20 +186,10 @@ def build_summary_table(max_sharpe, min_vol, equal_weight):
 #-------------------------------------------------------------------------------------
 # Step 6: Main Entry Point 
 #-------------------------------------------------------------------------------------
-def run_markowitz(
-    prices,
-    risk_free_rate=RISK_FREE_RATE,
-    n_frontier_points=50,
-    cov_method="ledoit_wolf",
-    ret_method="mean_historical_return",
-    weight_bounds=(0, 1),
-    verbose=True,
-):
-    """
+"""
     Full Markowitz pipeline in a single call.
 
-    Parameters
-    ----------
+    Parameters:-
     prices            : pd.DataFrame of adjusted closing prices (from fetch_data.py)
     risk_free_rate    : float — annual risk-free rate (default: 6.5% RBI repo rate)
     n_frontier_points : int   — number of efficient frontier points (default 50)
@@ -224,8 +198,7 @@ def run_markowitz(
     weight_bounds     : tuple — (min, max) weight per asset. (0,1) = long-only
     verbose           : bool  — print summary table to console
 
-    Returns
-    -------
+    Returns:-
     dict : {
         'mu'           : pd.Series      expected returns per asset
         'S'            : pd.DataFrame   covariance matrix
@@ -236,8 +209,7 @@ def run_markowitz(
         'summary'      : pd.DataFrame   strategy comparison table
     }
 
-    Example
-    -------
+    Example:-
     >>> from data.fetch_data import get_data
     >>> from models.markowitz import run_markowitz
     >>>
@@ -245,7 +217,17 @@ def run_markowitz(
     >>> results   = run_markowitz(prices)
     >>> print(results["summary"])
     >>> frontier  = results["frontier"]   # plug directly into Plotly chart
-    """
+"""
+def run_markowitz(
+    prices,
+    risk_free_rate=RISK_FREE_RATE,
+    n_frontier_points=50,
+    cov_method="ledoit_wolf",
+    ret_method="mean_historical_return",
+    weight_bounds=(0, 1),
+    verbose=True,
+):
+    
     log.info("=" * 60)
     log.info("  MARKOWITZ OPTIMISATION — START")
     log.info("=" * 60)
