@@ -3,6 +3,7 @@ yfinance
 pandas
 numpy
 requests
+xgboost
 
 # Optimisation
 PyPortfolioOpt
@@ -28,3 +29,4 @@ ipykernel
 # Utilities
 python-dotenv
 tqdm
+
