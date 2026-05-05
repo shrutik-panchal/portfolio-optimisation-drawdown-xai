@@ -226,8 +226,7 @@ def run_markowitz(
     ret_method="mean_historical_return",
     weight_bounds=(0, 1),
     verbose=True,
-):
-    
+): 
     log.info("=" * 60)
     log.info("  MARKOWITZ OPTIMISATION — START")
     log.info("=" * 60)

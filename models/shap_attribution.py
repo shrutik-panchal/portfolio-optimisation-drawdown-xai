@@ -181,7 +181,6 @@ def build_training_data(
     returns: pd.DataFrame,
     lookback: int = 63,
 ) -> tuple:
-    
     tickers       = returns.columns.tolist()
     feature_names = feature_df.columns.get_level_values(0).unique().tolist()
 
@@ -340,7 +339,6 @@ def global_feature_importance(
     shap_df: pd.DataFrame,
     top_n: int = 10,
 ) -> pd.DataFrame:
-    
     mean_abs = shap_df.abs().mean().sort_values(ascending=False)
     df = mean_abs.reset_index()
     df.columns = ["feature", "mean_abs_shap"]
@@ -349,8 +347,7 @@ def global_feature_importance(
 #-------------------------------------------------------------------------------------
 """
     Per-ticker mean SHAP values for core financial features only (excludes one-hot ticker dummies).
-    This answers: "For each stock, which features most influenced
-    its weight allocation?"
+    This answers: "For each stock, which features most influenced its weight allocation?"
 
     Parameters:-
     shap_df       : pd.DataFrame — SHAP values

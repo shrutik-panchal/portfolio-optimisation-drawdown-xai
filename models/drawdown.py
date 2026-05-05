@@ -54,7 +54,6 @@ RISK_FREE_RATE = 0.0525   # RBI repo rate, April 2026
     Drawdown               = [0.0, 0.0,-0.045, 0.0,-0.167]
 """
 def compute_drawdown_curve(cumulative_returns: pd.Series) -> pd.Series:
-    
     running_peak = cumulative_returns.cummax()
     drawdown     = (cumulative_returns - running_peak) / running_peak
     return drawdown
@@ -72,7 +71,6 @@ def compute_portfolio_drawdown(
     returns: pd.DataFrame,
     weights: dict | pd.Series,
 ) -> pd.Series:
-    
     if isinstance(weights, dict):
         weights = pd.Series(weights)
 
