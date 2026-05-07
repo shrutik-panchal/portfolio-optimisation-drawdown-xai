@@ -48,21 +48,15 @@ PROCESSED_DIR = os.path.join(os.path.dirname(__file__), "processed")
 #-------------------------------------------------------------------------------------
 # Core Functions
 #-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-# Fetch Prices 
-#-------------------------------------------------------------------------------------
 """
     Downloads adjusted closing prices for the given tickers.
-    Parameters
-    ----------
+    Parameters:-
     tickers     : list of Yahoo Finance ticker symbols
     start       : start date string 'YYYY-MM-DD'
     end         : end date string 'YYYY-MM-DD'
     auto_adjust : whether to use split/dividend-adjusted prices
 
-    Returns
-    -------
-    pd.DataFrame : Date-indexed DataFrame of closing prices
+    Returns: pd.DataFrame : Date-indexed DataFrame of closing prices
 """
 #-------------------------------------------------------------------------------------
 def fetch_prices(
@@ -79,8 +73,7 @@ def fetch_prices(
         end=end,
         auto_adjust=auto_adjust,
         progress=False,
-        threads=True,
-    )
+        threads=True,)
 
     # Handle single vs multi-ticker response
     if isinstance(raw.columns, pd.MultiIndex):
@@ -102,65 +95,40 @@ def fetch_prices(
 
     return prices
 #-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-# Compute Returns
-#-------------------------------------------------------------------------------------
 """
     Computes daily percentage returns from price data.
-    Parameters
-    ----------
-    prices : pd.DataFrame of closing prices
-
-    Returns
-    -------
-    pd.DataFrame : daily returns (first row dropped)
+    Parameters: prices : pd.DataFrame of closing prices
+    Returns: pd.DataFrame : daily returns (first row dropped)
 """
 #-------------------------------------------------------------------------------------
 def compute_returns(prices: pd.DataFrame) -> pd.DataFrame:
-    
     returns = prices.pct_change().dropna()
     log.info(f"Computed daily returns: {returns.shape}")
     return returns
 #-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-# Export data to Comma Separated Values (CSV) file
-#-------------------------------------------------------------------------------------
 """
     Saves a DataFrame to the data/processed/ directory.
-    Parameters
-    ----------
+    Parameters:-
     df       : DataFrame to save
     filename : output filename (e.g. 'prices_nse.csv')
 
-    Returns
-    -------
-    str : full file path of saved CSV
+    Returns: str : full file path of saved CSV
 """
 #-------------------------------------------------------------------------------------
 def save_to_csv(df: pd.DataFrame, filename: str) -> str:
-    
     os.makedirs(PROCESSED_DIR, exist_ok=True)
     filepath = os.path.join(PROCESSED_DIR, filename)
     df.to_csv(filepath)
     log.info(f"Saved → {filepath}")
     return filepath
 #-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-# Load cached prices
-#-------------------------------------------------------------------------------------
 """
     Loads cached prices from data/processed/.
-    Parameters
-    ----------
-    filename : CSV filename in data/processed/
-
-    Returns
-    -------
-    pd.DataFrame : price DataFrame with DatetimeIndex
+    Parameters: filename : CSV filename in data/processed/
+    Returns: pd.DataFrame : price DataFrame with DatetimeIndex
 """
 #-------------------------------------------------------------------------------------
 def load_prices(filename: str) -> pd.DataFrame:
-    
     filepath = os.path.join(PROCESSED_DIR, filename)
     if not os.path.exists(filepath):
         raise FileNotFoundError(
@@ -171,23 +139,17 @@ def load_prices(filename: str) -> pd.DataFrame:
     log.info(f"Loaded cached data: {df.shape} from {filepath}")
     return df
 #-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-# Main function to get data (with caching)
-#-------------------------------------------------------------------------------------
 """
     Main entry point — returns (prices, returns).
     Uses cached CSV if available unless force_refresh=True.
-    Parameters
-    ----------
+    Parameters:-
     tickers        : ticker list
     start          : start date
     end            : end date
     cache_filename : name for the cached CSV file
     force_refresh  : if True, re-downloads even if cache exists
 
-    Returns
-    -------
-    tuple : (prices DataFrame, returns DataFrame)
+    Returns: tuple : (prices DataFrame, returns DataFrame)
 """
 #-------------------------------------------------------------------------------------
 def get_data(
@@ -208,9 +170,6 @@ def get_data(
 
     returns = compute_returns(prices)
     return prices, returns
-#-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-# Summary Stats
 #-------------------------------------------------------------------------------------
 """Prints a clean performance summary of the fetched dataset."""
 #-------------------------------------------------------------------------------------
