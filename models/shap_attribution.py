@@ -7,11 +7,11 @@ Trains a gradient boosting model that learns to predict portfolio weights from a
 financial features, then uses SHAP to explain WHY the optimiser allocated capital the way it did.
 
 Pipeline:-
-  1. Feature engineering  — compute financial features per asset per period
-  2. Target creation      — use CDaR-optimal weights as labels
-  3. Model training       — XGBoost regressor per asset
-  4. SHAP computation     — global + local explanations
-  5. Attribution output   — ready to plug into dashboard charts
+  1. Feature engineering  - compute financial features per asset per period
+  2. Target creation      - use CDaR-optimal weights as labels
+  3. Model training       - XGBoost regressor per asset
+  4. SHAP computation     - global + local explanations
+  5. Attribution output   - ready to plug into dashboard charts
 
 Integrates with:-
   - data/fetch_data.py    → prices, returns
@@ -67,12 +67,12 @@ def compute_asset_features(
     drove the final weight allocation.
 
     Parameters:-
-    prices       : pd.DataFrame — adjusted closing prices
-    returns      : pd.DataFrame — daily returns
-    window_short : int          — short rolling window in trading days (~1 month)
-    window_long  : int          — long rolling window in trading days (~3 months)
+    prices       : pd.DataFrame - adjusted closing prices
+    returns      : pd.DataFrame - daily returns
+    window_short : int          - short rolling window in trading days (~1 month)
+    window_long  : int          - long rolling window in trading days (~3 months)
 
-    Returns: pd.DataFrame : MultiIndex columns (feature, ticker) — shape (T, F*N)
+    Returns: pd.DataFrame : MultiIndex columns (feature, ticker) - shape (T, F*N)
 
     Features computed per asset:-
     momentum_short    : cumulative return over short window
@@ -165,11 +165,11 @@ def compute_asset_features(
     to learn feature → weight relationships.
 
     Parameters:-
-    feature_df        : pd.DataFrame   — from compute_asset_features()
-    cdar_weights      : dict           — CDaR-optimal weights {ticker: weight}
-    markowitz_weights : dict           — Markowitz Max Sharpe weights {ticker: weight}
-    returns           : pd.DataFrame   — daily returns
-    lookback          : int            — rolling window for target weight assignment
+    feature_df        : pd.DataFrame   - from compute_asset_features()
+    cdar_weights      : dict           - CDaR-optimal weights {ticker: weight}
+    markowitz_weights : dict           - Markowitz Max Sharpe weights {ticker: weight}
+    returns           : pd.DataFrame   - daily returns
+    lookback          : int            - rolling window for target weight assignment
 
     Returns:-
     tuple : (X, y_cdar, y_markowitz, feature_names, tickers, dates)
@@ -233,11 +233,11 @@ def build_training_data(
       - Fast to train on tabular financial data
 
     Parameters:-
-    X            : pd.DataFrame — feature matrix
-    y            : pd.Series    — target weights
-    label        : str          — 'CDaR' or 'Markowitz' for logging
-    test_size    : float        — fraction held out for evaluation
-    random_state : int          — reproducibility seed
+    X            : pd.DataFrame - feature matrix
+    y            : pd.Series    - target weights
+    label        : str          - 'CDaR' or 'Markowitz' for logging
+    test_size    : float        - fraction held out for evaluation
+    random_state : int          - reproducibility seed
 
     Returns: tuple : (model, X_train, X_test, y_train, y_test, metrics_dict)
 """
@@ -296,8 +296,8 @@ def train_model(
 
     Parameters:-
     model : trained XGBRegressor
-    X     : pd.DataFrame — feature matrix (same columns as training)
-    label : str          — for logging
+    X     : pd.DataFrame - feature matrix (same columns as training)
+    label : str          - for logging
 
     Returns:-
     tuple : (explainer, shap_values_array, shap_df)
@@ -325,13 +325,13 @@ def compute_shap_values(
 # Step 5: Attribution Summaries
 #-------------------------------------------------------------------------------------
 """
-    Global SHAP importance — mean absolute SHAP value per feature.
+    Global SHAP importance - mean absolute SHAP value per feature.
     This answers: "Across all assets and all time periods, which features
     most consistently drove the weight allocation decisions?"
 
     Parameters:-
-    shap_df : pd.DataFrame — SHAP values from compute_shap_values()
-    top_n   : int          — return top N features
+    shap_df : pd.DataFrame - SHAP values from compute_shap_values()
+    top_n   : int          - return top N features
 
     Returns: pd.DataFrame : columns ['feature', 'mean_abs_shap'] sorted descending
 """
@@ -350,9 +350,9 @@ def global_feature_importance(
     This answers: "For each stock, which features most influenced its weight allocation?"
 
     Parameters:-
-    shap_df       : pd.DataFrame — SHAP values
-    meta_df       : pd.DataFrame — (date, ticker) metadata
-    feature_names : list         — core feature names (not one-hot columns)
+    shap_df       : pd.DataFrame - SHAP values
+    meta_df       : pd.DataFrame - (date, ticker) metadata
+    feature_names : list         - core feature names (not one-hot columns)
 
     Returns: pd.DataFrame : rows = tickers, columns = features, values = mean abs SHAP
 """
@@ -373,7 +373,7 @@ def per_ticker_shap(
     return ticker_shap
 #-------------------------------------------------------------------------------------
 """
-    Signed mean SHAP values per ticker — captures directionality.
+    Signed mean SHAP values per ticker - captures directionality.
     A positive value means the feature INCREASED the allocation to that asset.
     A negative value means the feature DECREASED the allocation.
 
@@ -402,15 +402,15 @@ def shap_direction_table(
     Parameters:-
     explainer     : shap.TreeExplainer
     X             : pd.DataFrame
-    meta_df       : pd.DataFrame — (date, ticker) metadata
-    ticker        : str          — which ticker to explain
-    feature_names : list         — core feature names
+    meta_df       : pd.DataFrame - (date, ticker) metadata
+    ticker        : str          - which ticker to explain
+    feature_names : list         - core feature names
 
     Returns:-
     dict : {
         'ticker'     : str,
         'date'       : pd.Timestamp,
-        'base_value' : float  — model's average prediction
+        'base_value' : float  - model's average prediction
         'features'   : list of feature names
         'shap_values': list of SHAP values
         'feature_values': list of actual feature values
@@ -493,32 +493,32 @@ def print_shap_summary(
     Full SHAP attribution pipeline in a single call.
 
     Parameters:-
-    prices             : pd.DataFrame — adjusted closing prices
-    returns            : pd.DataFrame — daily returns
-    markowitz_results  : dict         — output of run_markowitz()
-    drawdown_results   : dict         — output of run_drawdown()
-    top_n_features     : int          — top N features to report (default 10)
-    window_short       : int          — short rolling window (default 21 days)
-    window_long        : int          — long rolling window (default 63 days)
-    verbose            : bool         — print summary to console
+    prices             : pd.DataFrame - adjusted closing prices
+    returns            : pd.DataFrame - daily returns
+    markowitz_results  : dict         - output of run_markowitz()
+    drawdown_results   : dict         - output of run_drawdown()
+    top_n_features     : int          - top N features to report (default 10)
+    window_short       : int          - short rolling window (default 21 days)
+    window_long        : int          - long rolling window (default 63 days)
+    verbose            : bool         - print summary to console
 
     Returns:-
     dict : {
-        'feature_df'         : pd.DataFrame  — raw computed features
-        'X'                  : pd.DataFrame  — training feature matrix
-        'y_cdar'             : pd.Series     — CDaR weight targets
-        'y_markowitz'        : pd.Series     — Markowitz weight targets
-        'meta_df'            : pd.DataFrame  — (date, ticker) metadata
-        'cdar_model'         : XGBRegressor  — trained CDaR model
-        'markowitz_model'    : XGBRegressor  — trained Markowitz model
-        'cdar_metrics'       : dict          — R², MAE for CDaR model
-        'markowitz_metrics'  : dict          — R², MAE for Markowitz model
+        'feature_df'         : pd.DataFrame  - raw computed features
+        'X'                  : pd.DataFrame  - training feature matrix
+        'y_cdar'             : pd.Series     - CDaR weight targets
+        'y_markowitz'        : pd.Series     - Markowitz weight targets
+        'meta_df'            : pd.DataFrame  - (date, ticker) metadata
+        'cdar_model'         : XGBRegressor  - trained CDaR model
+        'markowitz_model'    : XGBRegressor  - trained Markowitz model
+        'cdar_metrics'       : dict          - R², MAE for CDaR model
+        'markowitz_metrics'  : dict          - R², MAE for Markowitz model
         'cdar_explainer'     : shap.TreeExplainer
         'cdar_shap_values'   : np.ndarray
         'cdar_shap_df'       : pd.DataFrame
-        'global_importance'  : pd.DataFrame  — top features by mean |SHAP|
-        'ticker_shap'        : pd.DataFrame  — per-ticker mean |SHAP|
-        'direction_table'    : pd.DataFrame  — signed SHAP per ticker
+        'global_importance'  : pd.DataFrame  - top features by mean |SHAP|
+        'ticker_shap'        : pd.DataFrame  - per-ticker mean |SHAP|
+        'direction_table'    : pd.DataFrame  - signed SHAP per ticker
         'feature_names'      : list
     }
 
@@ -556,7 +556,7 @@ def run_shap(
     verbose: bool = True,
 ) -> dict:    
     log.info("=" * 60)
-    log.info("  SHAP ATTRIBUTION — START")
+    log.info("  SHAP ATTRIBUTION - START")
     log.info("=" * 60)
 
     # Extract weights from upstream results

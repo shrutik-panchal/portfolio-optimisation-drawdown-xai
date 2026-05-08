@@ -140,7 +140,7 @@ def load_prices(filename: str) -> pd.DataFrame:
     return df
 #-------------------------------------------------------------------------------------
 """
-    Main entry point — returns (prices, returns).
+    Main entry point - returns (prices, returns).
     Uses cached CSV if available unless force_refresh=True.
     Parameters:-
     tickers        : ticker list
@@ -162,7 +162,7 @@ def get_data(
     cache_path = os.path.join(PROCESSED_DIR, cache_filename)
 
     if os.path.exists(cache_path) and not force_refresh:
-        log.info(f"Cache found — loading (use force_refresh=True to re-download)")
+        log.info(f"Cache found - loading (use force_refresh=True to re-download)")
         prices = load_prices(cache_filename)
     else:
         prices = fetch_prices(tickers, start, end)
