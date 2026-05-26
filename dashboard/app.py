@@ -1,7 +1,11 @@
 #-------------------------------------------------------------------------------------
 """
-app.py  —  v3  (fixed: all component IDs live in DOM at startup)
+app.py
+------
+Dash dashboard for the Portfolio Optimisation + Drawdown + SHAP XAI project.
 """
+#-------------------------------------------------------------------------------------
+# Importing required libraries and modules
 #-------------------------------------------------------------------------------------
 import sys, os, logging, warnings
 import numpy as np
@@ -20,6 +24,7 @@ from models.markowitz import run_markowitz
 from models.drawdown import run_drawdown, compute_portfolio_drawdown
 from models.shap_attribution import run_shap, waterfall_data
 #-------------------------------------------------------------------------------------
+# Logging setup
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -37,8 +42,10 @@ DEFAULT_TICKERS = "AXISBANK.NS, HDFCBANK.NS, ICICIBANK.NS, KOTAKBANK.NS, PNB.NS,
 DEFAULT_START   = "2015-01-01"
 DEFAULT_END     = pd.Timestamp.today().strftime("%Y-%m-%d")
 MIN_DAYS, WARN_DAYS = 756, 1260
-
-# ── Design tokens ──────────────────────────────────────────────────────────────
+#-------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------
+# Design tokens
+#-------------------------------------------------------------------------------------
 C = {
     "bg":      "#0d0f18", "surface":  "#13161f", "surface2": "#1a1d2b",
     "border":  "#252836", "text":     "#dde1f0", "muted":    "#6b7185",
@@ -49,9 +56,10 @@ C = {
 _BASE = dict(paper_bgcolor=C["surface"], plot_bgcolor=C["surface"],
              font=dict(color=C["text"], family="Inter,sans-serif", size=12),
              margin=dict(l=55, r=20, t=36, b=50))
-
+#-------------------------------------------------------------------------------------
+"""Return layout dict with optional key overrides (avoids duplicate-kwarg errors)."""
 def BASE(**overrides):
-    """Return layout dict with optional key overrides (avoids duplicate-kwarg errors)."""
+    
     d = dict(_BASE)
     d.update(overrides)
     return d
@@ -61,8 +69,11 @@ LEG = dict(bgcolor=C["surface2"], bordercolor=C["border"],
            borderwidth=1, font=dict(size=11))
 
 EMPTY_FIG = go.Figure().update_layout(**BASE())
-
-# ── UI helpers ─────────────────────────────────────────────────────────────────
+#-------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------
+# UI helpers
+#-------------------------------------------------------------------------------------
+# Input styles with optional overrides
 def inp_style(extra=None):
     s = {"background": C["surface2"], "border": f"1px solid {C['border']}",
          "borderRadius": "6px", "color": C["text"],
@@ -70,15 +81,18 @@ def inp_style(extra=None):
     if extra:
         s.update(extra)
     return s
-
+#-------------------------------------------------------------------------------------
+# Label for controls
 def lbl(text):
     return html.P(text, style={"color": C["muted"], "fontSize": "0.68rem",
                                 "textTransform": "uppercase",
                                 "letterSpacing": "0.06em", "marginBottom": "3px"})
-
+#-------------------------------------------------------------------------------------
+# Wrapper for a control with its label
 def ctrl(label_text, component):
     return html.Div([lbl(label_text), component])
-
+#-------------------------------------------------------------------------------------
+# Card wrapper with header and body
 def card_wrap(header_text, body):
     return html.Div([
         html.Div(header_text, style={
@@ -90,11 +104,13 @@ def card_wrap(header_text, body):
         html.Div(body),
     ], style={"background": C["surface"], "border": f"1px solid {C['border']}",
               "borderRadius": "10px", "overflow": "hidden"})
-
+#-------------------------------------------------------------------------------------
+# Graph component with default styles and empty figure
 def mk_graph(gid, height=380):
     return dcc.Graph(id=gid, config={"displayModeBar": False},
                      style={"height": f"{height}px"}, figure=EMPTY_FIG)
-
+#-------------------------------------------------------------------------------------
+# KPI card component with title, value, subtext, and accent color
 def kpi_card(title, val_id, sub_id, accent):
     return html.Div([
         html.P(title, style={"color": C["muted"], "fontSize": "0.68rem",
@@ -107,7 +123,8 @@ def kpi_card(title, val_id, sub_id, accent):
     ], style={"background": C["surface"], "border": f"1px solid {C['border']}",
               "borderRadius": "10px", "borderTop": f"3px solid {accent}",
               "padding": "14px 18px", "flex": "1", "minWidth": "180px"})
-
+#-------------------------------------------------------------------------------------
+# DataTable builder with consistent styling
 def dtable(df, tid):
     df2 = df.reset_index()
     return dash_table.DataTable(
@@ -127,11 +144,12 @@ def dtable(df, tid):
                                   "background": C["surface2"]}],
         page_action="none",
     )
-
+#-------------------------------------------------------------------------------------
 def pct(v): return f"{v:.1%}"
 def f2(v):  return f"{v:.2f}"
 def f3(v):  return f"{v:.3f}"
-
+#-------------------------------------------------------------------------------------
+# Detect market based on ticker suffixes, return market code, banner type, and message
 def detect_market(tickers):
     ns_bo = [t for t in tickers if t.endswith((".NS", ".BO"))]
     us    = [t for t in tickers if "." not in t]
@@ -140,22 +158,27 @@ def detect_market(tickers):
     if len(us)    == len(tickers): return "US", "warning", "All US tickers — Fed Funds Rate (4.30%)"
     if len(eu)    == len(tickers): return "EU", "warning", "All European tickers — ECB Rate (2.50%)"
     return "MIXED", "danger", "Mixed markets — use tickers from one market only"
-
+#-------------------------------------------------------------------------------------
+# Data quality banner based on number of trading days, with type and message
 def dq_banner(n):
     if n < MIN_DAYS:  return "danger",  f"Only {n} days. Minimum 3 years ({MIN_DAYS}) required."
     if n < WARN_DAYS: return "warning", f"{n} trading days — CDaR may underestimate tail risk."
     if n < 2520:      return "success", f"{n} trading days — all models reliable."
     return "success", f"{n} trading days — excellent, full market cycle included."
-
-# ── Tab styles ─────────────────────────────────────────────────────────────────
+#-------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------
+# Tab styles
+#-------------------------------------------------------------------------------------
 TS = {"color": C["muted"], "background": C["surface"], "border": "none",
       "padding": "11px 24px", "fontSize": "0.82rem", "fontWeight": "500",
       "borderBottom": "2px solid transparent"}
 TSS = {**TS, "color": C["text"], "fontWeight": "600",
        "borderBottom": f"2px solid {C['primary']}"}
 PAD = {"padding": "20px 24px"}
-
-# ── App ────────────────────────────────────────────────────────────────────────
+#-------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------
+# App
+#-------------------------------------------------------------------------------------
 app = dash.Dash(__name__,
     external_stylesheets=[
         dbc.themes.CYBORG,
@@ -165,13 +188,14 @@ app = dash.Dash(__name__,
     suppress_callback_exceptions=True,
 )
 server = app.server
-
-# ── Layout ─────────────────────────────────────────────────────────────────────
+#-------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------
+# Layout
+#-------------------------------------------------------------------------------------
 app.layout = html.Div([
-
     dcc.Store(id="shap-store"),
-
-    # ── Top control bar ──────────────────────────────────────────────────────
+    
+    # Top control bar
     html.Div([
         html.Div([
             # Logo
@@ -227,7 +251,7 @@ app.layout = html.Div([
     ], style={"background":C["surface"],"borderBottom":f"1px solid {C['border']}",
               "position":"sticky","top":"0","zIndex":"200"}),
 
-    # ── Tabs — ALL panels rendered at startup ─────────────────────────────────
+    # Tabs - ALL panels rendered at startup
     dcc.Tabs(id="main-tabs", value="overview",
         style={"background":C["surface"],"borderBottom":f"1px solid {C['border']}"},
         colors={"border":C["border"],"primary":C["primary"],"background":C["surface"]},
@@ -302,8 +326,10 @@ app.layout = html.Div([
 
 ], style={"fontFamily":"Inter,sans-serif","background":C["bg"],"minHeight":"100vh"})
 
-
-# ── Chart builders ─────────────────────────────────────────────────────────────
+#-------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------
+# Chart builders
+#-------------------------------------------------------------------------------------
 def build_frontier(mk):
     f  = mk["frontier"]
     ms, mv = mk["max_sharpe"], mk["min_vol"]
@@ -325,7 +351,7 @@ def build_frontier(mk):
         xaxis=dict(**AX, title="Annual Volatility (%)"),
         yaxis=dict(**AX, title="Annual Return (%)"))
     return fig
-
+#-------------------------------------------------------------------------------------
 def build_cdar(dd):
     fr   = dd["cdar_frontier"]
     mc   = dd["min_cdar"]
@@ -349,7 +375,7 @@ def build_cdar(dd):
         xaxis=dict(**AX, title="CDaR (%)"),
         yaxis=dict(**AX, title="Annual Return (%)"))
     return fig
-
+#-------------------------------------------------------------------------------------
 def build_weights(mk, dd):
     tickers = list(mk["max_sharpe"]["weights"].index)
     fig = go.Figure()
@@ -368,7 +394,7 @@ def build_weights(mk, dd):
         legend=dict(**LEG, orientation="h", yanchor="top",
                     y=-0.18, xanchor="center", x=0.5))
     return fig
-
+#-------------------------------------------------------------------------------------
 def build_drawdown(returns, mk, dd):
     fig = go.Figure()
     for name, w, color in [
@@ -389,7 +415,7 @@ def build_drawdown(returns, mk, dd):
         xaxis=dict(**AX, title="Date"),
         yaxis=dict(**AX, title="Drawdown (%)", ticksuffix="%"))
     return fig
-
+#-------------------------------------------------------------------------------------
 def build_shap_imp(sr):
     gi = sr["global_importance"]
     gi = gi[~gi["feature"].str.startswith("ticker_")].head(10)
@@ -404,7 +430,7 @@ def build_shap_imp(sr):
         xaxis=dict(**AX, title="Mean |SHAP Value|"),
         yaxis=dict(**AX, autorange="reversed"))
     return fig
-
+#-------------------------------------------------------------------------------------
 def build_shap_dir(sr):
     dt   = sr["direction_table"]
     dt   = dt.loc[:, dt.abs().max() > 1e-6]
@@ -429,7 +455,7 @@ def build_shap_dir(sr):
         yaxis={**AX, "title": "Ticker",
                "tickfont": dict(color=C["muted"], size=11)})
     return fig
-
+#-------------------------------------------------------------------------------------
 def build_waterfall(sr, ticker):
     wf = waterfall_data(sr["cdar_explainer"], sr["X"],
                         sr["meta_df"], ticker, sr["feature_names"])
@@ -463,8 +489,10 @@ def build_waterfall(sr, ticker):
         yaxis=dict(**AX, autorange="reversed"))
     return fig
 
-
-# ── Main run callback ──────────────────────────────────────────────────────────
+#-------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------
+# Main run callback
+#-------------------------------------------------------------------------------------
 NONE8 = [None] * 8   # 4 KPI pairs
 
 @app.callback(
@@ -498,6 +526,7 @@ NONE8 = [None] * 8   # 4 KPI pairs
     State("max-weight",             "value"),
     prevent_initial_call=True,
 )
+#-------------------------------------------------------------------------------------
 def run_analysis(_, ticker_str, start, end, market, beta, min_w, max_w):
     def fail(msg, color="danger"):
         badge_colors = {"warning": C["gold"], "danger": C["red"], "success": C["green"]}
@@ -588,14 +617,17 @@ def run_analysis(_, ticker_str, start, end, market, beta, min_w, max_w):
         log.exception("Analysis failed")
         return fail(f"Error: {e}", "danger")
 
-
-# ── Waterfall callback — reads from shap-store, zero recompute ────────────────────
+#-------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------
+# Waterfall callback - reads from shap-store, zero recompute
+#-------------------------------------------------------------------------------------
 @app.callback(
     Output("waterfall-chart", "figure"),
     Input("waterfall-ticker", "value"),
     Input("shap-store",       "data"),
     prevent_initial_call=True,
 )
+#-------------------------------------------------------------------------------------
 def update_waterfall(ticker, store):
     if not ticker or not store:
         return EMPTY_FIG
@@ -639,6 +671,8 @@ def update_waterfall(ticker, store):
                            font=dict(color=C["red"], size=12))
         return fig.update_layout(**BASE())
 
-
+#-------------------------------------------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True, port=8050)
+
+#-------------------------------------------------------------------------------------
