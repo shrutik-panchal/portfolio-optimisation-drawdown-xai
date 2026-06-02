@@ -19,11 +19,12 @@ The goal is not only to generate portfolio weights, but also to explain **why** 
 
 - **Market:** India (NSE/BSE)
 - **Universe:** AXISBANK.NS, HDFCBANK.NS, ICICIBANK.NS, KOTAKBANK.NS, PNB.NS, SBIN.NS
-- **Period:** 2015-01-01 to 2026-05-24
+- **Period:** 2015-01-01 to 2026-05-31
 - **Risk-free rate:** RBI Repo Rate (5.25%)
 - **CDaR beta:** 0.95
 - **Weight constraints:** min 6%, max 36%
 
+Note: All these parameters or inputs can be updated as required in dashboard.
 ## Features
 
 ### 1. Portfolio Construction
